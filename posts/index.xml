@@ -1,4 +1,63 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Musings on the modern world</title><link>https://rickschubert.net/blog/posts/</link><description>Musings on the modern world (Posts)</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 30 Dec 2020 14:17:19 +0000</lastBuildDate><atom:link href="https://rickschubert.net/blog/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Volunteering With My Programming Skills For A Non-Commercial Radio Station</title><link>https://rickschubert.net/blog/posts/volunteering-with-tech-skills-golang-music-library-reader/</link><pubDate>Wed, 30 Dec 2020 14:17:19 +0000</pubDate><guid>https://rickschubert.net/blog/posts/volunteering-with-tech-skills-golang-music-library-reader/</guid><description>&lt;p>&lt;a href="https://www.youtube.com/watch?v=Z3zD7z2vKZ8">During the Crimbo Limbo&lt;/a> period between Christmas and New Years, I volunteered with my programming skills. That&amp;rsquo;s how it came to be that I built a tool to create a browsable music library for the non-commercial radio station &lt;a href="https://greatamericansongbook.info">Great American Songbook&lt;/a>. This article discusses why and how.&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Musings on the modern world</title><link>https://rickschubert.net/blog/posts/</link><description>Musings on the modern world (Posts)</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 01 Jan 2021 15:29:34 +0000</lastBuildDate><atom:link href="https://rickschubert.net/blog/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>How to make a blog such as this one with Hugo</title><link>https://rickschubert.net/blog/posts/how-i-make-this-blog-with-gohugo/</link><pubDate>Fri, 01 Jan 2021 15:29:34 +0000</pubDate><guid>https://rickschubert.net/blog/posts/how-i-make-this-blog-with-gohugo/</guid><description>&lt;p>Creating a new article in this blog is a matter of writing a new text file and pushing it to my GitHub repository - while keeping it 100% free. Here&amp;rsquo;s how I achieved it to be this simple.&lt;/p>
+&lt;ol>
+&lt;li>&lt;a href="#generate">How to generate the website&lt;/a>&lt;/li>
+&lt;li>&lt;a href="#host">How to host the website&lt;/a>&lt;/li>
+&lt;/ol>
+&lt;h2 id="a-namegenerateahow-to-generate-the-website">&lt;a name="generate">&lt;/a>How to generate the website&lt;/h2>
+&lt;p>I use the tool &lt;a href="https://gohugo.io/">Hugo&lt;/a> to create this blog. Hugo is a static site generator - this means that you simply feed it with some text files and it then spits out all of the files which form a complete web page. Although Hugo is written in Go, it is published as a CLI tool - there is no Go knowledge necessary to use it.&lt;/p>
+&lt;p>Setting up the website was fairly easy, I literally followed the &lt;a href="https://gohugo.io/getting-started/quick-start/">Quick Start&lt;/a> guide in the docs. There are a few things which I did differently and I want to outline these to make it easier on people who also want to start their own blog.&lt;/p>
+&lt;p>Hugo is based around the concept of templates - instead of you having to create your own website from scratch, you can access other people&amp;rsquo;s page templates and make them your own. Anyone can create templates and there are literally hundres of them for free &lt;a href="https://themes.gohugo.io/">on their website&lt;/a>. This is how I found the &lt;a href="https://github.com/Mitrichius/hugo-theme-anubis">Anubis theme&lt;/a>. As I wanted to tweak this theme and adjust it to my personal needs, I created a &lt;a href="https://github.com/rickschubert/hugo-theme-anubis">GitHub fork of the project&lt;/a>. If you have a theme you consider using, I would highly advise you to also fork it right away as it gravely simplifies the later modification process. Once the theme was forked, I had to pull it in as a git submodule: &lt;code>git submodule add https://github.com/rickschubert/hugo-theme-anubis themes/anubis&lt;/code>.&lt;/p>
+&lt;p>From there on, working with hugo is a charm: &lt;code>hugo new posts/my-new-post.md&lt;/code> would create a new markdown file in the directory &lt;code>posts&lt;/code> where all the blog posts live. In case you haven&amp;rsquo;t seen markdown before, this is literally how the start of this article looks like!:&lt;/p>
+&lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-md" data-lang="md">---
+title: &amp;#34;How to make a blog such as this one with Hugo&amp;#34;
+date: 2021-01-01T15:29:34Z
+draft: true
+tags: [&amp;#34;programming&amp;#34;]
+---
+I am really happy with the tools I use for my blog [...]
+I use the tool [&lt;span style="color:#f92672">Hugo&lt;/span>](&lt;span style="color:#a6e22e">https://gohugo.io/&lt;/span>) to create this blog.
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>Since the articles are markdown, writing new articles becomes a breeze. I write all of my articles in Visual Studio Code with its amazing &amp;ldquo;Zen Mode&amp;rdquo; feature. Trust me, I wrote a full play with this program - it&amp;rsquo;s amazing! Since all articles are plain text, I can copy and paste them wherever necessary; I often move my texts to grammarly.com in order to perform a quick spell check. (I am the king of typos, I know.)&lt;/p>
+&lt;figure>
+&lt;img src="https://rickschubert.net/blog/images/vscode_zen_mode.PNG" />
+&lt;figcaption>
+&lt;h4>Visual Studio Code Zen Mode in action&lt;/h4>
+&lt;/figcaption>
+&lt;/figure>
+&lt;p>If all is done, the static website files can be generated using &lt;code>hugo --minify&lt;/code> which creates a directory &lt;code>public/&lt;/code> - easy as that!&lt;/p>
+&lt;h2 id="a-namehostahow-to-host-the-website">&lt;a name="host">&lt;/a>How to host the website&lt;/h2>
+&lt;p>My hosting solution is fully automated and 100% free - two attributes I am incredibly happy about. I use the &lt;a href="https://pages.github.com/">GitHub pages&lt;/a> feature which makes it possible to transform GitHub repositories into websites. I am using this feature already for my main page &lt;a href="https://rickschubert.net">https://rickschubert.net&lt;/a> which actually lives under &lt;a href="https://rickschubert.github.io">https://rickschubert.github.io&lt;/a> (as &lt;code>rickschubert&lt;/code> is my GitHub user name). I then &lt;a href="https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/configuring-a-custom-domain-for-your-github-pages-site">updated the DNS configuration of my domain to point to the GitHub server&lt;/a>.&lt;/p>
+&lt;p>If you already have one repository that is your main GitHub page, any other repository which you want to host via GitHub pages becomes accessible as path with the name of the repository - so a repository &lt;code>/blog&lt;/code> would be accessible under &lt;a href="https://rickschubert.github.io/blog">https://rickschubert.github.io/blog&lt;/a>. But since I have the DNS redirects set up over at my domain provider Google Domains, the redirects also work for the blog!&lt;/p>
+&lt;p>My workflow of bringing the files to GitHub is fairly ingeniuous. While &lt;a href="https://github.com/rickschubert/blog">https://github.com/rickschubert/blog&lt;/a> contains the minified and uglified static website files which need to be open to the public, the actual source code of the website is stored in a private repository. That repository has GitHub actions configured in such a way that on every push to that private repository, the &lt;code>hugo --minify&lt;/code> command gets run to build the static website. Another task then moves these output files to my &lt;code>/blog&lt;/code> repository which is open to the public. See below my GitHub actions file (&lt;code>.github/workflows/hugo.yml&lt;/code>) for how I achieve this:&lt;/p>
+&lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Website publish&lt;/span>
+&lt;span style="color:#f92672">on&lt;/span>:
+&lt;span style="color:#f92672">push&lt;/span>:
+&lt;span style="color:#f92672">branches&lt;/span>: [ &lt;span style="color:#ae81ff">master ]&lt;/span>
+&lt;span style="color:#f92672">jobs&lt;/span>:
+&lt;span style="color:#f92672">deploy&lt;/span>:
+&lt;span style="color:#f92672">runs-on&lt;/span>: &lt;span style="color:#ae81ff">ubuntu-18.04&lt;/span>
+&lt;span style="color:#f92672">steps&lt;/span>:
+- &lt;span style="color:#f92672">uses&lt;/span>: &lt;span style="color:#ae81ff">actions/checkout@v2&lt;/span>
+&lt;span style="color:#f92672">with&lt;/span>:
+&lt;span style="color:#f92672">submodules&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span> &lt;span style="color:#75715e"># Fetch Hugo themes (true OR recursive)&lt;/span>
+&lt;span style="color:#f92672">fetch-depth&lt;/span>: &lt;span style="color:#ae81ff">0&lt;/span> &lt;span style="color:#75715e"># Fetch all history for .GitInfo and .Lastmod&lt;/span>
+- &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Setup Hugo&lt;/span>
+&lt;span style="color:#f92672">uses&lt;/span>: &lt;span style="color:#ae81ff">peaceiris/actions-hugo@v2&lt;/span>
+&lt;span style="color:#f92672">with&lt;/span>:
+&lt;span style="color:#f92672">hugo-version&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;0.79.1&amp;#39;&lt;/span>
+- &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Build&lt;/span>
+&lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">HUGO_ENV=production hugo --minify&lt;/span>
+- &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Pushes to another repository&lt;/span>
+&lt;span style="color:#f92672">uses&lt;/span>: &lt;span style="color:#ae81ff">cpina/github-action-push-to-another-repository@master&lt;/span>
+&lt;span style="color:#f92672">env&lt;/span>:
+&lt;span style="color:#f92672">API_TOKEN_GITHUB&lt;/span>: &lt;span style="color:#ae81ff">${{ secrets.API_TOKEN_GITHUB }}&lt;/span>
+&lt;span style="color:#f92672">with&lt;/span>:
+&lt;span style="color:#f92672">source-directory&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;public&amp;#39;&lt;/span>
+&lt;span style="color:#f92672">destination-github-username&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;rickschubert&amp;#39;&lt;/span>
+&lt;span style="color:#f92672">destination-repository-name&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;blog&amp;#39;&lt;/span>
+&lt;span style="color:#f92672">user-email&lt;/span>: &lt;span style="color:#ae81ff">rickschubert@gmx.de&lt;/span>
+&lt;span style="color:#f92672">target-branch&lt;/span>: &lt;span style="color:#ae81ff">gh-pages&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;hr>
+&lt;p>On the Hugo website, the tag line reads &amp;ldquo;Hugo makes building websites fun again&amp;rdquo; - I have to agree! The concept of shareable themes takes all the pain from content producers, especially for small projects like my blog. Instead of having to spend countless hours on designing and updating my website I get the chance to focus on writing articles. Thanks, Hugo!&lt;/p></description></item><item><title>Volunteering With My Programming Skills For A Non-Commercial Radio Station</title><link>https://rickschubert.net/blog/posts/volunteering-with-tech-skills-golang-music-library-reader/</link><pubDate>Wed, 30 Dec 2020 14:17:19 +0000</pubDate><guid>https://rickschubert.net/blog/posts/volunteering-with-tech-skills-golang-music-library-reader/</guid><description>&lt;p>&lt;a href="https://www.youtube.com/watch?v=Z3zD7z2vKZ8">During the Crimbo Limbo&lt;/a> period between Christmas and New Years, I volunteered with my programming skills. That&amp;rsquo;s how it came to be that I built a tool to create a browsable music library for the non-commercial radio station &lt;a href="https://greatamericansongbook.info">Great American Songbook&lt;/a>. This article discusses why and how.&lt;/p>
 &lt;ol>
 &lt;li>&lt;a href="#why">How I came to volunteer&lt;/a>&lt;/li>
 &lt;li>&lt;a href="#tool">Building the tool&lt;/a>&lt;/li>
