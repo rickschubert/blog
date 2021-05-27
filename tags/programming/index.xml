@@ -1,4 +1,163 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>programming on Musings on the modern world</title><link>https://rickschubert.net/blog/tags/programming/</link><description>Musings on the modern world (programming)</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 10 May 2021 23:19:54 +0100</lastBuildDate><atom:link href="https://rickschubert.net/blog/tags/programming/index.xml" rel="self" type="application/rss+xml"/><item><title>mock-inspect: Mock network requests and observe how these requests were made</title><link>https://rickschubert.net/blog/posts/mock-inspect-what-it-is-and-how-to-use-it/</link><pubDate>Mon, 10 May 2021 23:19:54 +0100</pubDate><guid>https://rickschubert.net/blog/posts/mock-inspect-what-it-is-and-how-to-use-it/</guid><description>&lt;blockquote>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>programming on Musings on the modern world</title><link>https://rickschubert.net/blog/tags/programming/</link><description>Musings on the modern world (programming)</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 27 May 2021 23:23:02 +0100</lastBuildDate><atom:link href="https://rickschubert.net/blog/tags/programming/index.xml" rel="self" type="application/rss+xml"/><item><title>mock-inspect: A simple way to achieve contract testing</title><link>https://rickschubert.net/blog/posts/mock-inspect-contract-testing/</link><pubDate>Thu, 27 May 2021 23:23:02 +0100</pubDate><guid>https://rickschubert.net/blog/posts/mock-inspect-contract-testing/</guid><description>&lt;blockquote>
+&lt;p>This article is part of a series about the open-source Node.js testing library &lt;em>mock-inspect&lt;/em> of which I am the main contributor and author. &lt;a href="https://rickschubert.net/blog/tags/mock-inspect">Check out the entire series here!&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;p>In &lt;a href="https://rickschubert.net/blog/posts/mock-inspect-what-it-is-and-how-to-use-it">last week&amp;rsquo;s article&lt;/a>, we discussed how we can use &lt;a href="https://github.com/trayio/mock-inspect">&lt;em>mock-inspect&lt;/em>&lt;/a> to assert &lt;em>if&lt;/em> and &lt;em>how&lt;/em> the application under test makes network requests to API endpoints while simultaneously mocking out their responses. This week we are going to explore how we can use &lt;em>mock-inspect&lt;/em> to implement a contract testing strategy without complicated frameworks like PACT.&lt;/p>
+&lt;p>This post is accompanied by a &lt;a href="https://github.com/rickschubert/mock-inspect-contract-testing-example">GitHub repository&lt;/a> which holds all the code examples so that they can be tried out locally.&lt;/p>
+&lt;h2 id="understanding-contract-testing">Understanding contract testing&lt;/h2>
+&lt;p>A network request is made out of two steps:&lt;/p>
+&lt;ul>
+&lt;li>The &lt;strong>consumer&lt;/strong> &lt;em>asks&lt;/em> for something&lt;/li>
+&lt;li>The &lt;strong>provider&lt;/strong> &lt;em>answers&lt;/em> with something&lt;/li>
+&lt;/ul>
+&lt;p>The problem is usually that provider and consumer sit in different code bases. Think of a web app: The provider would be the backend server and the consumer would be a frontend application questioning the backend server. Both projects usually live in separate repositories.&lt;/p>
+&lt;p>Contract testing aims to ensure that if the consumer &lt;em>asks&lt;/em> for the right thing, the provider &lt;em>answers&lt;/em> with the right thing. A popular testing framework for this is &lt;a href="https://docs.pact.io/">PACT&lt;/a> which is a monster on its own, providing beefy implementations for a multitude of programming languages. The way it works is by setting up a &amp;ldquo;contract&amp;rdquo; which contains information about how the request should be made and what the API should respond with. To check the consumer side, PACT would tell you to create a mock server that responds with some mocked data given that the request has been made the right way.&lt;/p>
+&lt;p>&lt;em>mock-inspect&lt;/em> is a Node.js tool which allows you to mock network requests and inspect how these requests were made. You can see where I am going with this: As long as the consumer is written in Node.js (like a frontend application or a backend server), we can use &lt;em>mock-inspect&lt;/em> for contract testing - no need for the complicated PACT framework.&lt;/p>
+&lt;h2 id="strategy-overview-no-contracts-yet">Strategy overview (no contracts yet)&lt;/h2>
+&lt;p>In contract testing, we want to test both aspects of the flow: the provider and the consumer side.&lt;/p>
+&lt;p>A provider test is simple to do and doesn&amp;rsquo;t even need &lt;em>mock-inspect&lt;/em>. As long as we write a test for our backend server which asserts that the response is correct (given the correct request was made), we have already the provider side covered. Pretty easy.&lt;/p>
+&lt;p>More interesting is the consumer side which is where &lt;em>mock-inspect&lt;/em> can be used. No matter if your consumer is a backend server or a frontend application, as long as it is written in Node.js and making a network request, &lt;em>mock-inspect&lt;/em> can help you. All we have to do is to write a test with a mocked network request and then assert that the consumer has asked the right question, i.e. has included the correct headers and payload. This is how such a consumer test could look like in mock-inspect:&lt;/p>
+&lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-js" data-lang="js">&lt;span style="color:#66d9ef">const&lt;/span> {&lt;span style="color:#a6e22e">mockRequest&lt;/span>} &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;mock-inspect&amp;#34;&lt;/span>)
+&lt;span style="color:#75715e">// Inside your test
+&lt;/span>&lt;span style="color:#75715e">// Step 1: Set up the mock for the third party API so that your test
+&lt;/span>&lt;span style="color:#75715e">// does not hit the real API. Provide a fixed response body.
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">thirdPartyMock&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">mockRequest&lt;/span>({
+&lt;span style="color:#a6e22e">url&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;http://localhost:5000/v1/cities_you_can_fly_to&amp;#34;&lt;/span>,
+&lt;span style="color:#a6e22e">method&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;POST&amp;#34;&lt;/span>,
+&lt;span style="color:#a6e22e">responseBody&lt;/span>&lt;span style="color:#f92672">:&lt;/span> {
+&lt;span style="color:#a6e22e">London&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;span style="color:#a6e22e">Birmingham&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;span style="color:#a6e22e">Edinburgh&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">false&lt;/span>
+}
+})
+&lt;span style="color:#75715e">// Step 2: Have your test execute the code which is expected
+&lt;/span>&lt;span style="color:#75715e">// to call the provider (backend server)
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">await&lt;/span> &lt;span style="color:#a6e22e">printPossibleLocations&lt;/span>()
+&lt;span style="color:#75715e">// Step 3: Using mock-inspect&amp;#39;s `inspect()` method available on
+&lt;/span>&lt;span style="color:#75715e">// instances returned by `mockRequest`, check out how the request
+&lt;/span>&lt;span style="color:#75715e">// was made and match it against your expectations
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">const&lt;/span> {
+&lt;span style="color:#a6e22e">requestPayload&lt;/span>,
+&lt;span style="color:#a6e22e">requestHeaders&lt;/span>
+} &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">thirdPartyMock&lt;/span>.&lt;span style="color:#a6e22e">inspect&lt;/span>()
+&lt;span style="color:#a6e22e">expect&lt;/span>(&lt;span style="color:#a6e22e">requestHeaders&lt;/span>[&lt;span style="color:#e6db74">&amp;#34;authorization&amp;#34;&lt;/span>]).&lt;span style="color:#a6e22e">toEqual&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Bearer my_API_token_was_used&amp;#34;&lt;/span>)
+&lt;span style="color:#a6e22e">expect&lt;/span>(&lt;span style="color:#a6e22e">requestPayload&lt;/span>).&lt;span style="color:#a6e22e">toEqual&lt;/span>({&lt;span style="color:#a6e22e">filterByCountry&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;England&amp;#34;&lt;/span>})
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>The above test executes our function which is making a network request to our backend server (the &amp;ldquo;provider&amp;rdquo;) and then asserts that the request has been made correctly. In the example above, we are checking that the API token has been forwarded in the request headers and that a request payload has been used to filter the list of cities by a specific country.&lt;/p>
+&lt;h2 id="adding-a-contract">Adding a contract&lt;/h2>
+&lt;p>We now have two separate test suites which do their job. But the problem is that these tests don&amp;rsquo;t yet relate to each other: we could end up modifying the expectations on one side only to realise that these don&amp;rsquo;t match up anymore with the behaviour on the other side.&lt;/p>
+&lt;p>This is where contracts come in. A contract is a way of codifying the behaviour for both sides of the request, consumer and provider. The provider (the backend server) agrees to respond with a certain message as long as it is asked the correct question. The consumer in turn can be sure that it will receive the correct answer given it asks the right question.&lt;/p>
+&lt;p>A suitable format for this information is JSON file as it can be understood by any programming language. That way, we can use contract testing even for non-Node.js providers, no matter if these are written in Java, Golang or something else. I would structure a contract as follows:&lt;/p>
+&lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-json" data-lang="json">{
+&lt;span style="color:#f92672">&amp;#34;request&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;url&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;http://localhost:5000/v1/cities_you_can_fly_to&amp;#34;&lt;/span>,
+&lt;span style="color:#f92672">&amp;#34;method&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;POST&amp;#34;&lt;/span>,
+&lt;span style="color:#f92672">&amp;#34;payload&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;type&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;object&amp;#34;&lt;/span>,
+&lt;span style="color:#f92672">&amp;#34;properties&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;filterByCountry&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;type&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;string&amp;#34;&lt;/span>,
+&lt;span style="color:#f92672">&amp;#34;minLength&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">1&lt;/span>
+}
+},
+&lt;span style="color:#f92672">&amp;#34;additionalProperties&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;span style="color:#f92672">&amp;#34;required&amp;#34;&lt;/span>: [
+&lt;span style="color:#e6db74">&amp;#34;filterByCountry&amp;#34;&lt;/span>
+]
+},
+&lt;span style="color:#f92672">&amp;#34;headers&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;authorization&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;Bearer my_API_token_was_used&amp;#34;&lt;/span>
+}
+},
+&lt;span style="color:#f92672">&amp;#34;response&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;body&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;type&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;object&amp;#34;&lt;/span>,
+&lt;span style="color:#f92672">&amp;#34;minProperties&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">3&lt;/span>,
+&lt;span style="color:#f92672">&amp;#34;patternProperties&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;^.*$&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;type&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;boolean&amp;#34;&lt;/span>
+}
+}
+},
+&lt;span style="color:#f92672">&amp;#34;statusCode&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">200&lt;/span>,
+&lt;span style="color:#f92672">&amp;#34;headers&amp;#34;&lt;/span>: {
+&lt;span style="color:#f92672">&amp;#34;content-type&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;application/json; charset=utf-8&amp;#34;&lt;/span>
+}
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>We are defining two pieces of information here:&lt;/p>
+&lt;ul>
+&lt;li>In &lt;code>request&lt;/code> we define &lt;strong>how the request should be made&lt;/strong>. We should be hitting the desired URL with the &lt;code>POST&lt;/code> method and we need to provide a JSON payload. The JSON payload needs to follow a specific &lt;a href="https://json-schema.org/">JSON schema&lt;/a>. To explain JSON schema would be out of scope for this article but in short, it is a way of describing JSON structures. In the case above, we say that the &lt;code>payload&lt;/code> needs to be a JSON object with a required property called &lt;code>filterByCountry&lt;/code> which holds a string value.&lt;/li>
+&lt;li>In &lt;code>response&lt;/code> we define &lt;strong>what the API should return&lt;/strong>. The API should respond with a status code of 200 and the &lt;code>application/json; charset=utf-8&lt;/code> header as Content-Type. The response body should be a JSON object with at least three properties which should all hold a boolean value.&lt;/li>
+&lt;/ul>
+&lt;p>These contracts are best placed into a separate repository so that they can be accessed by different test suites. Ideally, you would version this repository either using NPM modules or with git tags. Versioning allows for different test suites to use these contracts independently and makes updating test suites a breeze.&lt;/p>
+&lt;p>Once we have the contract finished, all we have to do is set up our two test suites so that they make use of the contract instead of the previously hard-coded value. The provider test (for the backend server) will now take the JSON schema defined under &lt;code>response.body&lt;/code> and assert that the API does indeed serve a JSON structure matching that schema. The test will now also check that the status code and the headers match those defined in &lt;code>response&lt;/code>.&lt;/p>
+&lt;p>Below is how the provider test looks with contracts. We are using the NPM library &lt;a href="https://json-schema-faker.js.org/">&lt;code>json-schema-faker&lt;/code>&lt;/a> to generate a sample request payload that abides by the rules stated in the contract&amp;rsquo;s JSON schema. Additionally, we are using the &lt;a href="https://github.com/ajv-validator/ajv">AJV library&lt;/a> to assert that the response body matches the JSON schema.&lt;/p>
+&lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-js" data-lang="js">&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">request&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;request-promise&amp;#34;&lt;/span>)
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;../../contracts/v1/cities_you_can_fly_to.json&amp;#34;&lt;/span>)
+&lt;span style="color:#75715e">// Used to auto-generate a request payload from the contract&amp;#39;s JSON schema
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">jsonSchemaFaker&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;json-schema-faker&amp;#34;&lt;/span>)
+&lt;span style="color:#75715e">// Used to validate that the response body matches the JSON schema
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">AJV&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;ajv&amp;#34;&lt;/span>)
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">ajv&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> &lt;span style="color:#a6e22e">AJV&lt;/span>({&lt;span style="color:#a6e22e">allErrors&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>})
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">result&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">await&lt;/span> &lt;span style="color:#a6e22e">request&lt;/span>({
+&lt;span style="color:#a6e22e">url&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>.&lt;span style="color:#a6e22e">url&lt;/span>,
+&lt;span style="color:#a6e22e">method&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>.&lt;span style="color:#a6e22e">method&lt;/span>,
+&lt;span style="color:#a6e22e">headers&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>.&lt;span style="color:#a6e22e">headers&lt;/span>,
+&lt;span style="color:#a6e22e">body&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">jsonSchemaFaker&lt;/span>.&lt;span style="color:#a6e22e">generate&lt;/span>(&lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>.&lt;span style="color:#a6e22e">payload&lt;/span>),
+&lt;span style="color:#a6e22e">resolveWithFullResponse&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;span style="color:#a6e22e">json&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>,
+})
+&lt;span style="color:#a6e22e">expect&lt;/span>(&lt;span style="color:#a6e22e">result&lt;/span>.&lt;span style="color:#a6e22e">statusCode&lt;/span>).&lt;span style="color:#a6e22e">toBe&lt;/span>(&lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">response&lt;/span>.&lt;span style="color:#a6e22e">statusCode&lt;/span>)
+&lt;span style="color:#66d9ef">for&lt;/span> (&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">header&lt;/span> &lt;span style="color:#66d9ef">in&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">response&lt;/span>.&lt;span style="color:#a6e22e">headers&lt;/span>) {
+&lt;span style="color:#a6e22e">expect&lt;/span>(&lt;span style="color:#a6e22e">result&lt;/span>.&lt;span style="color:#a6e22e">headers&lt;/span>[&lt;span style="color:#a6e22e">header&lt;/span>]).&lt;span style="color:#a6e22e">toBe&lt;/span>(
+&lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">response&lt;/span>.&lt;span style="color:#a6e22e">headers&lt;/span>[&lt;span style="color:#a6e22e">header&lt;/span>],
+)
+}
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">validator&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">ajv&lt;/span>.&lt;span style="color:#a6e22e">compile&lt;/span>(&lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">response&lt;/span>.&lt;span style="color:#a6e22e">body&lt;/span>)
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">isValid&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">validator&lt;/span>(&lt;span style="color:#a6e22e">result&lt;/span>.&lt;span style="color:#a6e22e">body&lt;/span>)
+&lt;span style="color:#66d9ef">if&lt;/span> (&lt;span style="color:#f92672">!&lt;/span>&lt;span style="color:#a6e22e">isValid&lt;/span>) {
+&lt;span style="color:#66d9ef">throw&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> Error(
+&lt;span style="color:#e6db74">&amp;#34;Our provider did not send a response body matching&amp;#34;&lt;/span> &lt;span style="color:#f92672">+&lt;/span>
+&lt;span style="color:#e6db74">&amp;#34;the contract response body.&amp;#34;&lt;/span>,
+)
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>The consumer test works similarly, but this time we are generating a sample response and validate against the request payload. Thanks to &lt;em>mock-inspect&lt;/em>, we don&amp;rsquo;t need to run the backend server for our unit tests: &lt;em>mock-inspect&lt;/em> mocks the outgoing network request and returns the specified sample response. We can make use of the &lt;code>inspect()&lt;/code> method exposed by &lt;em>mock-inspect&lt;/em> to see how a request has been made. This is exactly what we want to assert on the consumer side: we want to ensure that the consumer makes the network request as stated in the contract.&lt;/p>
+&lt;p>This is how our consumer test looks like after introducing contracts:&lt;/p>
+&lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-js" data-lang="js">&lt;span style="color:#66d9ef">const&lt;/span> {&lt;span style="color:#a6e22e">printPossibleLocations&lt;/span>} &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;../index.js&amp;#34;&lt;/span>)
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;../../contracts/v1/cities_you_can_fly_to.json&amp;#34;&lt;/span>)
+&lt;span style="color:#75715e">// Used to mock the network request going to the API
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">const&lt;/span> {&lt;span style="color:#a6e22e">mockRequest&lt;/span>} &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;mock-inspect&amp;#34;&lt;/span>)
+&lt;span style="color:#75715e">// Used to auto-generate a response from the contract&amp;#39;s JSON schema
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">jsonSchemaFaker&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;json-schema-faker&amp;#34;&lt;/span>)
+&lt;span style="color:#75715e">// Used to validate that the request payload matches the JSON schema
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">AJV&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;ajv&amp;#34;&lt;/span>)
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">ajv&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> &lt;span style="color:#a6e22e">AJV&lt;/span>({&lt;span style="color:#a6e22e">allErrors&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>})
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">citiesRequest&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">mockRequest&lt;/span>({
+&lt;span style="color:#a6e22e">requestPattern&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>.&lt;span style="color:#a6e22e">url&lt;/span>,
+&lt;span style="color:#a6e22e">requestMethod&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>.&lt;span style="color:#a6e22e">method&lt;/span>,
+&lt;span style="color:#a6e22e">responseBody&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">jsonSchemaFaker&lt;/span>.&lt;span style="color:#a6e22e">generate&lt;/span>(&lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">response&lt;/span>.&lt;span style="color:#a6e22e">body&lt;/span>),
+&lt;span style="color:#a6e22e">responseStatus&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">response&lt;/span>.&lt;span style="color:#a6e22e">statusCode&lt;/span>,
+&lt;span style="color:#a6e22e">responseHeaders&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">response&lt;/span>.&lt;span style="color:#a6e22e">headers&lt;/span>,
+})
+&lt;span style="color:#66d9ef">await&lt;/span> &lt;span style="color:#a6e22e">printPossibleLocations&lt;/span>()
+&lt;span style="color:#66d9ef">const&lt;/span> {&lt;span style="color:#a6e22e">requestBody&lt;/span>, &lt;span style="color:#a6e22e">requestHeaders&lt;/span>} &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">citiesRequest&lt;/span>.&lt;span style="color:#a6e22e">inspect&lt;/span>()
+&lt;span style="color:#66d9ef">for&lt;/span> (&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">header&lt;/span> &lt;span style="color:#66d9ef">in&lt;/span> &lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>.&lt;span style="color:#a6e22e">headers&lt;/span>) {
+&lt;span style="color:#a6e22e">expect&lt;/span>(&lt;span style="color:#a6e22e">requestHeaders&lt;/span>[&lt;span style="color:#a6e22e">header&lt;/span>]).&lt;span style="color:#a6e22e">toBe&lt;/span>(
+&lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>.&lt;span style="color:#a6e22e">headers&lt;/span>[&lt;span style="color:#a6e22e">header&lt;/span>],
+)
+}
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">validator&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">ajv&lt;/span>.&lt;span style="color:#a6e22e">compile&lt;/span>(&lt;span style="color:#a6e22e">contract&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>.&lt;span style="color:#a6e22e">payload&lt;/span>)
+&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">isValid&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">validator&lt;/span>(&lt;span style="color:#a6e22e">requestBody&lt;/span>)
+&lt;span style="color:#66d9ef">if&lt;/span> (&lt;span style="color:#f92672">!&lt;/span>&lt;span style="color:#a6e22e">isValid&lt;/span>) {
+&lt;span style="color:#66d9ef">throw&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> Error(
+&lt;span style="color:#e6db74">&amp;#34;Our consumer did not send a request payload matching&amp;#34;&lt;/span> &lt;span style="color:#f92672">+&lt;/span>
+&lt;span style="color:#e6db74">&amp;#34;the contract request payload.&amp;#34;&lt;/span>,
+)
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="closing-words">Closing words&lt;/h2>
+&lt;p>As you saw, it is easy to do contract testing with &lt;em>mock-inspect&lt;/em>, there is no need for complicated frameworks like PACT. All we need is a consumer written in Node.js so that we can use &lt;em>mock-inspect&lt;/em> to mock network requests. Since any programming language can read JSON files, providers can make use of the contracts in their test suites, no matter if these provider services are written in Java, Golang or any other language - the same principles apply.&lt;/p>
+&lt;p>I wish you a lot of fun with contract testing! Should you have any questions, don&amp;rsquo;t hesitate to reach out to us over at &lt;a href="https://github.com/trayio/mock-inspect">&lt;em>mock-inspect&lt;/em>&lt;/a>.&lt;/p>
+&lt;hr>
+&lt;p>&lt;a href="https://github.com/trayio/mock-inspect/tree/main/assets/chameleon.png">Chameleon&lt;/a> graphic by &lt;a href="https://pixabay.com/users/monstreh-637659/?utm_source=link-attribution&amp;amp;utm_medium=referral&amp;amp;utm_campaign=image&amp;amp;utm_content=3340930">Анна Куликова&lt;/a> from &lt;a href="https://pixabay.com/?utm_source=link-attribution&amp;amp;utm_medium=referral&amp;amp;utm_campaign=image&amp;amp;utm_content=3340930">Pixabay&lt;/a>&lt;/p></description></item><item><title>mock-inspect: Mock network requests and observe how these requests were made</title><link>https://rickschubert.net/blog/posts/mock-inspect-what-it-is-and-how-to-use-it/</link><pubDate>Mon, 10 May 2021 23:19:54 +0100</pubDate><guid>https://rickschubert.net/blog/posts/mock-inspect-what-it-is-and-how-to-use-it/</guid><description>&lt;blockquote>
 &lt;p>This article is part of a series about the open-source Node.js testing library mock-inspect of which I am the main contributor and author. &lt;a href="https://rickschubert.net/blog/tags/mock-inspect">Check out the entire series here!&lt;/a>&lt;/p>
 &lt;/blockquote>
 &lt;p>&lt;a href="https://github.com/trayio/mock-inspect">mock-inspect is an open-source library&lt;/a> for Node.js which allows you to mock network requests in your tests and to inspect how these requests have been made in the application. Has the endpoint been called? Which request body and request headers did the application pass along? This knowledge can be used to create your very own assertions, entirely depending on your use case.&lt;/p>
